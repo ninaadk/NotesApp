@@ -140,39 +140,49 @@ void CWindowHandler::ShowNote()
    // window info for mru entry
    WndInfo wi;
 
-   // find note from MRU which is not already displayed
-   WndInfoItr it = std::find_if(m_mruList.begin(), m_mruList.end(), NotCurrentlyDisplayed);
+   // note dialog
+   CNoteDlg dlg(CWnd::GetDesktopWindow(), nullptr);
 
-   if(it != m_mruList.end())
+   using_lock_guard
    {
-      // found in mru.
-      // display this note and set it to latest in mru
-      wi = *it;
-      m_mruList.erase(it); // erase old entry
-   }
-   else
-   {
-      // not found in mru.
-      // create new note and display.
-      // set as latest in mru
-      CNote * pNewNote = theApp.GetNotesDb()->GetRoot()->AddNewChild();
+      std::lock_guard<std::recursive_mutex> lockmru(m_csMru);
 
-      wi.pNote = pNewNote;
+      // find note from MRU which is not already displayed
+      WndInfoItr it = std::find_if(m_mruList.begin(), m_mruList.end(), NotCurrentlyDisplayed);
+
+      if(it != m_mruList.end())
+      {
+         // found in mru.
+         // display this note and set it to latest in mru
+         wi = *it;
+         m_mruList.erase(it); // erase old entry
+      }
+      else
+      {
+         // not found in mru.
+         // create new note and display.
+         // set as latest in mru
+         CNote * pNewNote = theApp.GetNotesDb()->GetRoot()->AddNewChild();
+
+         wi.pNote = pNewNote;
+      }
+      
+      dlg.SetNote(wi.pNote);
+      wi.pWnd = &dlg;
+      wi.Fgw.get();
+      m_mruList.push_front(wi);  // add new entry in mru
    }
-   
-   CNoteDlg dlg(CWnd::GetDesktopWindow(), wi.pNote);
-   wi.pWnd = &dlg;
-   wi.Fgw.get();
-   m_mruList.push_front(wi);  // add new entry in mru
 
    dlg.ShowNote(wi.dwSelection, wi.rectWndPosition, wi.nFirstVisibleLine);
 }
 
 
-void CWindowHandler::OnCloseWnd(CNoteDlg * pWnd, DWORD dwSelection, const RECT rectPos, int nFirstLine)
+void CWindowHandler::SaveWindowInfo(CNoteDlg * pWnd, DWORD dwSelection, const RECT rectPos, int nFirstLine)
 {
    if(pWnd)
    {
+      std::lock_guard<std::recursive_mutex> lockmru(m_csMru);
+
       // find the window in Mru list and update position, selection data
       WndInfoItr it = std::find_if(m_mruList.begin(), m_mruList.end(), IsSameWnd(pWnd));
       if(it != m_mruList.end())
@@ -185,10 +195,12 @@ void CWindowHandler::OnCloseWnd(CNoteDlg * pWnd, DWORD dwSelection, const RECT r
    }
 }
 
-void CWindowHandler::OnDestroyWnd(CNoteDlg * pWnd)
+void CWindowHandler::UpdateMruList(CNoteDlg * pWnd)
 {
    if(pWnd)
    {
+      std::lock_guard<std::recursive_mutex> lockmru(m_csMru);
+
       // find the window in Mru list and bring it to front
       // Also save mru list to disk
       WndInfoItr it = std::find_if(m_mruList.begin(), m_mruList.end(), IsSameWnd(pWnd));
@@ -209,6 +221,8 @@ void CWindowHandler::ForgetForgroundWindow(CNoteDlg * pDlg)
 {
    if(pDlg)
    {
+      std::lock_guard<std::recursive_mutex> lockmru(m_csMru);
+
       WndInfoItr it = std::find_if(m_mruList.begin(), m_mruList.end(), IsSameWnd(pDlg));
       if(it != m_mruList.end())
       {
@@ -220,6 +234,8 @@ void CWindowHandler::ForgetForgroundWindow(CNoteDlg * pDlg)
 CNoteDlg * CWindowHandler::IsDisplayed(const CNote * pNote)
 {
    CNoteDlg * pRetVal = NULL;
+
+   std::lock_guard<std::recursive_mutex> lockmru(m_csMru);
 
    WndInfoItr it = std::find_if(m_mruList.begin(), m_mruList.end(), IsSameNote(pNote));
 
@@ -233,6 +249,8 @@ CNoteDlg * CWindowHandler::IsDisplayed(const CNote * pNote)
 
 WndInfo CWindowHandler::SwitchNote(CNoteDlg * pWnd, CNote * pNoteSwitchTo, DWORD dwSelection, const RECT rectPos, int nFirstLine)
 {
+   std::lock_guard<std::recursive_mutex> lockmru(m_csMru);
+
    // remove window handle from old note
    CForegroundWindow fgwOrig;
    WndInfoItr itOrig = std::find_if(m_mruList.begin(), m_mruList.end(), IsSameWnd(pWnd));
@@ -271,6 +289,7 @@ WndInfo CWindowHandler::SwitchNote(CNoteDlg * pWnd, CNote * pNoteSwitchTo, DWORD
 WndInfo CWindowHandler::DeleteAndSwitch(CNoteDlg * pWnd)
 {
    WndInfo wi;
+   std::lock_guard<std::recursive_mutex> lockmru(m_csMru);
 
    // find window in list
    WndInfoItr itOrig = std::find_if(m_mruList.begin(), m_mruList.end(), IsSameWnd(pWnd));
@@ -316,30 +335,63 @@ void CWindowHandler::PasteToPastebin()
    WndInfo wi;
    wi.pNote = pNotePasteBin;
 
-   // find note in mru list
-   WndInfoItr it = std::find_if(m_mruList.begin(), m_mruList.end(), IsSameNote(pNotePasteBin));
+   // note window
+   CNoteDlg dlg(CWnd::GetDesktopWindow(), pNotePasteBin);
+   bool bAlreadyDisplayed = false;
 
-   if(it != m_mruList.end())
+   using_lock_guard
    {
-      wi = *it;
-      m_mruList.erase(it);
+      std::lock_guard<std::recursive_mutex> lockmru(m_csMru);
+
+      // find note in mru list
+      WndInfoItr it = std::find_if(m_mruList.begin(), m_mruList.end(), IsSameNote(pNotePasteBin));
+
+      if(it != m_mruList.end())
+      {
+         wi = *it;
+         m_mruList.erase(it);
+      }
+
+      wi.Fgw.get();
+
+      if (wi.pWnd)
+      {
+         // already displayed
+         m_mruList.push_front(wi);  // add new entry in mru
+         wi.pWnd->Paste();
+         bAlreadyDisplayed = true;
+      }
+      else
+      {
+         dlg.m_bPaste = true;
+         wi.pWnd = &dlg;
+         m_mruList.push_front(wi);  // add new entry in mru
+      }
    }
 
-   wi.Fgw.get();
-
-   if (wi.pWnd)
+   if(!bAlreadyDisplayed)
    {
-      // already displayed
-      m_mruList.push_front(wi);  // add new entry in mru
-      wi.pWnd->Paste();
-   }
-   else
-   {
-      CNoteDlg dlg(CWnd::GetDesktopWindow(), wi.pNote);
-      dlg.m_bPaste = true;
-      wi.pWnd = &dlg;
-      m_mruList.push_front(wi);  // add new entry in mru
-
       dlg.ShowNote(wi.dwSelection, wi.rectWndPosition, wi.nFirstVisibleLine);
+   }
+}
+
+void CWindowHandler::CloseAll()
+{
+   std::vector<CNoteDlg*> vOpenWindows;
+
+   {
+      std::lock_guard<std::recursive_mutex> lockmru(m_csMru);
+      for (auto& info : m_mruList)
+      {
+         if (info.pWnd)
+         {
+            vOpenWindows.push_back(info.pWnd);
+         }
+      }
+   }
+
+   for (auto & wnd : vOpenWindows)
+   {
+      wnd->SendMessage(WM_SAVE_STATE);
    }
 }

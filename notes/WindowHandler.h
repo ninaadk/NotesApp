@@ -2,6 +2,7 @@
 #include "NotesDb.h"
 #include <list>
 #include <memory>
+#include <mutex>
 
 //-----------------------------------------------------------------------------------------
 // CForegroundWindow
@@ -143,9 +144,10 @@ public:
    // Show current note and handle navigation to other notes
    void ShowNote();
    void PasteToPastebin();
+   void CloseAll();
 
-   void OnCloseWnd(CNoteDlg * pWnd, DWORD dwSelection, const RECT rectPos, int nFirstLine);
-   void OnDestroyWnd(CNoteDlg * pWnd);
+   void SaveWindowInfo(CNoteDlg* pWnd, DWORD dwSelection, const RECT rectPos, int nFirstLine);
+   void UpdateMruList(CNoteDlg* pWnd);
    WndInfo SwitchNote(CNoteDlg * pWnd, CNote * pNoteSwitchTo, DWORD dwSelection, const RECT rectPos, int nFirstLine);
    WndInfo DeleteAndSwitch(CNoteDlg * pWnd);
    CNoteDlg * IsDisplayed(const CNote * pNote);
@@ -155,6 +157,7 @@ public:
 private:
    CNotesDb * m_pDb;
    WndInfoList m_mruList;
+   std::recursive_mutex m_csMru;
 
    bool LoadMruList();
    bool SaveMruList();

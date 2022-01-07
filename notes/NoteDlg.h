@@ -111,6 +111,7 @@ private:
 
    // functions called by window handler:
 public:
+   void SetNote(CNote * pNote) {m_pNote = pNote;}
    void Paste();
    void ShowNote(DWORD dwSel, const RECT &rectPosition, int nFirstLine);
 
@@ -156,4 +157,5 @@ protected:
    afx_msg LRESULT OnDoMru(WPARAM wParam, LPARAM lParam);
    afx_msg LRESULT OnFinishMru(WPARAM wParam, LPARAM lParam);
    afx_msg LRESULT OnDeleteNote(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnSaveState(WPARAM wParam, LPARAM lParam);
 };

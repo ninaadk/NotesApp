@@ -70,5 +70,9 @@ constexpr UINT WM_DO_MRU         = WM_USER + 7;
 constexpr UINT WM_FINISH_MRU     = WM_USER + 8;
 constexpr UINT WM_DELETE_NOTE    = WM_USER + 9;
 constexpr UINT WM_PASTEBIN       = WM_USER + 10;
+constexpr UINT WM_SAVE_STATE     = WM_USER + 11;
 
 constexpr bool g_bResizeDuringSwitching = true;
+
+// macro for marking lock_guard scope
+#define using_lock_guard

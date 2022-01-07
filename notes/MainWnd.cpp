@@ -46,7 +46,7 @@ void CMainWnd::OnHotKey(UINT nHotKeyId, UINT nKey1, UINT nKey2)
    case 2:
       {
          // close app (Win+Shift+N)
-         // TODO: close any open windows
+         theApp.m_wh.CloseAll();
          DestroyWindow();
          break;
       }

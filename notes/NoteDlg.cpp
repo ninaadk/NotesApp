@@ -382,6 +382,7 @@ BEGIN_MESSAGE_MAP(CNoteDlg, CDialogEx)
    ON_EN_KILLFOCUS(IDC_EDIT_NOTE, &CNoteDlg::OnEnKillfocusEditNote)
    ON_EN_SETFOCUS(IDC_EDIT_NOTE, &CNoteDlg::OnEnSetfocusEditNote)
    ON_WM_ACTIVATE()
+   ON_MESSAGE(WM_SAVE_STATE, &CNoteDlg::OnSaveState)
 END_MESSAGE_MAP()
 
 
@@ -460,7 +461,7 @@ void CNoteDlg::OnCancel()
    m_dwSelection = m_edtNote.GetSel();
    int nFirstLine = m_edtNote.GetFirstVisibleLine();
 
-   theApp.m_wh.OnCloseWnd(this, m_dwSelection, m_rectPosition, nFirstLine);
+   theApp.m_wh.SaveWindowInfo(this, m_dwSelection, m_rectPosition, nFirstLine);
    CDialogEx::OnCancel();
 }
 
@@ -468,7 +469,7 @@ void CNoteDlg::PostNcDestroy()
 {
    CDialogEx::PostNcDestroy();
 
-   theApp.m_wh.OnDestroyWnd(this);
+   theApp.m_wh.UpdateMruList(this);
 }
 
 
@@ -788,6 +789,20 @@ void CNoteDlg::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
          m_edtNote.ShowWindow(SW_SHOW);
       }
    }
+}
+
+afx_msg LRESULT CNoteDlg::OnSaveState(WPARAM wParam, LPARAM lParam)
+{
+   Save();
+
+   GetWindowRect(&m_rectPosition);
+   m_dwSelection = m_edtNote.GetSel();
+   int nFirstLine = m_edtNote.GetFirstVisibleLine();
+
+   theApp.m_wh.SaveWindowInfo(this, m_dwSelection, m_rectPosition, nFirstLine);
+   theApp.m_wh.UpdateMruList(this);
+
+   return 0;
 }
 
 bool IsCtrlPressed()
