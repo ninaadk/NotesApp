@@ -245,7 +245,7 @@ void CNotesDbFile::Save(CNote * pNote)
       CTextFile file;
       if (file.OpenOrCreate(wsPath.c_str(), true))
       {
-         file.Write(pNote->GetText(), false);
+         file.Write(pNote->GetText());
          file.Close();
       }
 
