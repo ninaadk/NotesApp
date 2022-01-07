@@ -231,6 +231,20 @@ void CWindowHandler::ForgetForgroundWindow(CNoteDlg * pDlg)
    }
 }
 
+void CWindowHandler::SetPreviousForgroundWindow(CNoteDlg* pDlg, HWND hPrevious)
+{
+   if (pDlg)
+   {
+      std::lock_guard<std::recursive_mutex> lockmru(m_csMru);
+
+      WndInfoItr it = std::find_if(m_mruList.begin(), m_mruList.end(), IsSameWnd(pDlg));
+      if (it != m_mruList.end())
+      {
+         it->Fgw.assign(hPrevious);
+      }
+   }
+}
+
 CNoteDlg * CWindowHandler::IsDisplayed(const CNote * pNote)
 {
    CNoteDlg * pRetVal = NULL;

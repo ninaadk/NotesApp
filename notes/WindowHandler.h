@@ -37,6 +37,10 @@ public:
    {
       m_hFGWnd = NULL;
    }
+   void assign(HWND hwnd)
+   {
+      m_hFGWnd = hwnd;
+   }
 };
 
 //-----------------------------------------------------------------------------------------
@@ -153,6 +157,7 @@ public:
    CNoteDlg * IsDisplayed(const CNote * pNote);
    WndInfoList & GetMruList();
    void ForgetForgroundWindow(CNoteDlg * pDlg);
+   void SetPreviousForgroundWindow(CNoteDlg* pDlg, HWND hPrevious);
 
 private:
    CNotesDb * m_pDb;
