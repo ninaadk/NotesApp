@@ -72,7 +72,8 @@ constexpr UINT WM_DELETE_NOTE    = WM_USER + 9;
 constexpr UINT WM_PASTEBIN       = WM_USER + 10;
 constexpr UINT WM_SAVE_STATE     = WM_USER + 11;
 
-constexpr bool g_bResizeDuringSwitching = true;
+constexpr bool       g_bResizeDuringSwitching = true;
+constexpr unsigned   g_ulMaxMruSize = 25;
 
 // macro for marking lock_guard scope
 #define using_lock_guard

@@ -166,4 +166,5 @@ private:
 
    bool LoadMruList();
    bool SaveMruList();
+   void TruncateMruList();
 };

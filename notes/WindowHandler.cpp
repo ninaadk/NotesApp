@@ -119,6 +119,10 @@ bool CWindowHandler::LoadMruList()
             m_mruList.push_back(info);
          }
       }
+      if (m_mruList.size() >= g_ulMaxMruSize)
+      {
+         break;
+      }
    }
 
    return true;
@@ -133,6 +137,14 @@ bool CWindowHandler::SaveMruList()
       wsMru += L"\r\n";
    }
    return m_pDb->SaveMru(wsMru);
+}
+
+void CWindowHandler::TruncateMruList()
+{
+   while (m_mruList.size() > g_ulMaxMruSize)
+   {
+      m_mruList.pop_back();
+   }
 }
 
 void CWindowHandler::ShowNote()
@@ -171,6 +183,7 @@ void CWindowHandler::ShowNote()
       wi.pWnd = &dlg;
       wi.Fgw.get();
       m_mruList.push_front(wi);  // add new entry in mru
+      TruncateMruList();
    }
 
    dlg.ShowNote(wi.dwSelection, wi.rectWndPosition, wi.nFirstVisibleLine);
@@ -297,6 +310,7 @@ WndInfo CWindowHandler::SwitchNote(CNoteDlg * pWnd, CNote * pNoteSwitchTo, DWORD
       wi.Fgw = fgwOrig;
       m_mruList.push_front(wi);
    }
+   TruncateMruList();
    return wi;
 }
 
@@ -381,6 +395,7 @@ void CWindowHandler::PasteToPastebin()
          wi.pWnd = &dlg;
          m_mruList.push_front(wi);  // add new entry in mru
       }
+      TruncateMruList();
    }
 
    if(!bAlreadyDisplayed)
