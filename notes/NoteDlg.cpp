@@ -578,7 +578,7 @@ afx_msg LRESULT CNoteDlg::OnHideSwitcher(WPARAM wParam, LPARAM lParam)
             // if yes, bring to forground
             ::SetForegroundWindow(pDisplayedWnd->m_edtNote);
             pDisplayedWnd->m_edtNote.SetFocus();
-            theApp.m_wh.SetPreviousForgroundWindow(pDisplayedWnd, m_hWnd);
+            theApp.m_wh.SwitchToExistingNoteWindow(pDisplayedWnd, m_hWnd);
          }
          else
          {
@@ -677,7 +677,7 @@ afx_msg LRESULT CNoteDlg::OnFinishMru(WPARAM wParam, LPARAM lParam)
             // if yes, bring to forground
             ::SetForegroundWindow(pDisplayedWnd->m_edtNote);
             pDisplayedWnd->m_edtNote.SetFocus();
-            theApp.m_wh.SetPreviousForgroundWindow(pDisplayedWnd, m_hWnd);
+            theApp.m_wh.SwitchToExistingNoteWindow(pDisplayedWnd, m_hWnd);
          }
          else
          {

@@ -203,7 +203,36 @@ void CWindowHandler::SaveWindowInfo(CNoteDlg * pWnd, DWORD dwSelection, const RE
          it->rectWndPosition = rectPos;
          it->dwSelection = dwSelection;
          it->nFirstVisibleLine = nFirstLine;
-         it->Fgw.revert();
+
+         // bring to front
+         WndInfo wi = *it;
+         m_mruList.erase(it);
+         m_mruList.push_front(wi);
+         
+         // check previous forground window
+         if (wi.Fgw.Handle())
+         {
+            // found previous fg window
+            HWND h = wi.Fgw.Handle();
+            // bring it to forground
+            wi.Fgw.revert();
+            
+            // check if it is another note dialog
+            // if found, bring that note to front in mru
+            auto IsSameHwnd = [h](const WndInfo& info)
+            {
+               return ((info.pWnd) && (info.pWnd->m_hWnd == h));
+            };
+            
+            WndInfoItr itPreviousNote = std::find_if(m_mruList.begin(), m_mruList.end(), IsSameHwnd);
+
+            if (itPreviousNote != m_mruList.end())
+            {
+               wi = *itPreviousNote;
+               m_mruList.erase(itPreviousNote);
+               m_mruList.push_front(wi);
+            }
+         }
       }
    }
 }
@@ -222,9 +251,6 @@ void CWindowHandler::UpdateMruList(CNoteDlg * pWnd)
          // mark as not currently displayed
          it->pWnd = NULL;
 
-         WndInfo wi = *it;
-         m_mruList.erase(it);
-         m_mruList.push_front(wi);
          SaveMruList();
       }
    }
@@ -244,16 +270,23 @@ void CWindowHandler::ForgetForgroundWindow(CNoteDlg * pDlg)
    }
 }
 
-void CWindowHandler::SetPreviousForgroundWindow(CNoteDlg* pDlg, HWND hPrevious)
+void CWindowHandler::SwitchToExistingNoteWindow(CNoteDlg* pDlg, HWND hPrevious)
 {
    if (pDlg)
    {
       std::lock_guard<std::recursive_mutex> lockmru(m_csMru);
-
+      
+      // find note
       WndInfoItr it = std::find_if(m_mruList.begin(), m_mruList.end(), IsSameWnd(pDlg));
       if (it != m_mruList.end())
       {
+         // set forground window
          it->Fgw.assign(hPrevious);
+
+         // bring to front
+         WndInfo wi = *it;
+         m_mruList.erase(it);
+         m_mruList.push_front(wi);
       }
    }
 }
