@@ -568,41 +568,49 @@ afx_msg LRESULT CNoteDlg::OnHideSwitcher(WPARAM wParam, LPARAM lParam)
       m_edtNote.ShowWindow(SW_SHOW);
       m_edtNote.SetFocus();
 
-      CNote * pNote = m_pSwitcher->GetCurrentNote();
-      if(pNote != m_pNote)
+      // check wparam: 0:ENTER, 1:ESC
+      if (wParam == 0)
       {
-         // is note already displayed
-         CNoteDlg * pDisplayedWnd = theApp.m_wh.IsDisplayed(pNote);
-         if(pDisplayedWnd)
+         CNote* pNote = m_pSwitcher->GetCurrentNote();
+         if (pNote != m_pNote)
          {
-            // if yes, bring to forground
-            ::SetForegroundWindow(pDisplayedWnd->m_edtNote);
-            pDisplayedWnd->m_edtNote.SetFocus();
-            theApp.m_wh.SwitchToExistingNoteWindow(pDisplayedWnd, m_hWnd);
-         }
-         else
-         {
-            // if no, switch to the note
-            Save();
-
-            GetWindowRect(&m_rectPosition);
-            m_dwSelection = m_edtNote.GetSel();
-            m_nFirstLine = m_edtNote.GetFirstVisibleLine();
-
-            WndInfo wi = theApp.m_wh.SwitchNote(this, pNote, m_dwSelection, m_rectPosition, m_nFirstLine);
-         
-            m_pNote = pNote;
-            m_dwSelection = wi.dwSelection;
-            m_nFirstLine = wi.nFirstVisibleLine;
-
-            if (g_bResizeDuringSwitching)  // set to TRUE for updating window size/position while switching
+            // is note already displayed
+            CNoteDlg* pDisplayedWnd = theApp.m_wh.IsDisplayed(pNote);
+            if (pDisplayedWnd)
             {
-               m_rectPosition = wi.rectWndPosition;
-               ResizeWindow(wi.rectWndPosition);
+               // if yes, bring to forground
+               ::SetForegroundWindow(pDisplayedWnd->m_edtNote);
+               pDisplayedWnd->m_edtNote.SetFocus();
+               theApp.m_wh.SwitchToExistingNoteWindow(pDisplayedWnd, m_hWnd);
             }
+            else
+            {
+               // if no, switch to the note
+               Save();
 
-            ShowNote(m_pNote);
+               GetWindowRect(&m_rectPosition);
+               m_dwSelection = m_edtNote.GetSel();
+               m_nFirstLine = m_edtNote.GetFirstVisibleLine();
+
+               WndInfo wi = theApp.m_wh.SwitchNote(this, pNote, m_dwSelection, m_rectPosition, m_nFirstLine);
+
+               m_pNote = pNote;
+               m_dwSelection = wi.dwSelection;
+               m_nFirstLine = wi.nFirstVisibleLine;
+
+               if (g_bResizeDuringSwitching)  // set to TRUE for updating window size/position while switching
+               {
+                  m_rectPosition = wi.rectWndPosition;
+                  ResizeWindow(wi.rectWndPosition);
+               }
+
+               ShowNote(m_pNote);
+            }
          }
+      }
+      else
+      {
+         ShowNote(m_pNote);
       }
    }
    return 0;
@@ -850,6 +858,10 @@ BOOL CNoteDlg::OnKeyDown(MSG* pMsg)
       HotKey_Ctrl_Tab(IsShiftPressed());
       bRetVal = TRUE;
    }
+   else if (nChar == VK_ESCAPE)
+   {
+      bRetVal = HotKey_Escape();
+   }
    return bRetVal;
 }
 
@@ -885,6 +897,18 @@ BOOL CNoteDlg::HotKey_ENTER()
    if (m_bSwitcherDisplayed)
    {
       PostMessageW(WM_HIDE_SWITCHER);
+      m_bSwitcherDisplayed = false;
+      bRetVal = TRUE;
+   }
+   return bRetVal;
+}
+
+BOOL CNoteDlg::HotKey_Escape()
+{
+   BOOL bRetVal = FALSE;
+   if (m_bSwitcherDisplayed)
+   {
+      PostMessageW(WM_HIDE_SWITCHER, 1);
       m_bSwitcherDisplayed = false;
       bRetVal = TRUE;
    }
@@ -946,7 +970,8 @@ bool IsHotKeyChar(UINT nChar)
       (nChar == L'N') ||
       (nChar == L'D') ||
       (nChar == VK_TAB) ||
-      (nChar == VK_SHIFT)
+      (nChar == VK_SHIFT) ||
+      (nChar == VK_ESCAPE)
       )
    {
       bRetVal = true;

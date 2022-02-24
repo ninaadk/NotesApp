@@ -134,6 +134,7 @@ private:
    BOOL HotKey_Arrow(UINT nChar);
    void HotKey_Ctrl_Tab(bool bShiftDown);
    void HotKey_Ctrl_Up();
+   BOOL HotKey_Escape();
 
 
    // message handlers and overloaded functions:
