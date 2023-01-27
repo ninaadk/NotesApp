@@ -13,7 +13,7 @@ class INoteSwitcherUI
 public:
    virtual ~INoteSwitcherUI(){}
    virtual void Show(CNote * pCurrentNote) = 0;
-   virtual void Hide() = 0;
+   virtual void Hide(bool bCancel = false) = 0;
    virtual void MoveRight() = 0;
    virtual void MoveLeft() = 0;
    virtual void MoveUp() = 0;
@@ -27,7 +27,7 @@ public:
    CEditNoteSwitcher(CWnd* pParentWnd, CWnd* pEditNote);
    ~CEditNoteSwitcher();
    void Show(CNote* pCurrentNote);
-   void Hide();
+   void Hide(bool bCancel = false);
    void MoveRight();
    void MoveLeft();
    void MoveUp();

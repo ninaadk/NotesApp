@@ -205,20 +205,24 @@ void CEditNoteSwitcher::MoveDown()
    }
 }
 
-void CEditNoteSwitcher::Hide()
+void CEditNoteSwitcher::Hide(bool bCancel /*= false*/)
 {
-   if (m_bAddChildAtTop && m_pParentNote)
+   if(!bCancel)
    {
-      m_pCurrentNote = m_pParentNote->AddNewChild(false);
+      if (m_bAddChildAtTop && m_pParentNote)
+      {
+         m_pCurrentNote = m_pParentNote->AddNewChild(false);
+      }
+      else if (m_bAddChildAtEnd && m_pParentNote)
+      {
+         m_pCurrentNote = m_pParentNote->AddNewChild();
+      }
+      else if (m_bAddChild && m_pCurrentNote)
+      {
+         m_pCurrentNote = m_pCurrentNote->AddNewChild();
+      }
    }
-   else if (m_bAddChildAtEnd && m_pParentNote)
-   {
-      m_pCurrentNote = m_pParentNote->AddNewChild();
-   }
-   else if (m_bAddChild && m_pCurrentNote)
-   {
-      m_pCurrentNote = m_pCurrentNote->AddNewChild();
-   }
+
    if (m_pThumbNailWnd)
    {
       m_pThumbNailWnd->DestroyWindow();
@@ -793,7 +797,7 @@ void CNoteDlg::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 
       if (m_pSwitcher)
       {
-         m_pSwitcher->Hide();
+         m_pSwitcher->Hide(true);
          m_bSwitcherDisplayed = false;
          m_edtTitle.SetReadOnly(FALSE);
          m_edtNote.ShowWindow(SW_SHOW);
