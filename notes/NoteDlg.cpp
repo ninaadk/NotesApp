@@ -567,7 +567,7 @@ afx_msg LRESULT CNoteDlg::OnHideSwitcher(WPARAM wParam, LPARAM lParam)
 {
    if (m_pSwitcher)
    {
-      m_pSwitcher->Hide();
+      m_pSwitcher->Hide(wParam == 1);
       m_edtTitle.SetReadOnly(FALSE);
       m_edtNote.ShowWindow(SW_SHOW);
       m_edtNote.SetFocus();
@@ -890,7 +890,7 @@ void CNoteDlg::Hotkey_Ctrl_N()
    }
    else
    {
-      PostMessageW(WM_HIDE_SWITCHER);
+      PostMessageW(WM_HIDE_SWITCHER, 1);
       m_bSwitcherDisplayed = false;
    }
 }
